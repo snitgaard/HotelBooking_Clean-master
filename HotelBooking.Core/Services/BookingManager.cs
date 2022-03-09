@@ -51,7 +51,7 @@ namespace HotelBooking.Core
             }
             return -1;
         }
-
+         
         public List<DateTime> GetFullyOccupiedDates(DateTime startDate, DateTime endDate)
         {
             if (startDate > endDate)
