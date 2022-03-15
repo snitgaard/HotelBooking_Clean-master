@@ -24,10 +24,10 @@ namespace HotelBooking.UnitTests
             {
                 new Booking { StartDate=DateTime.Now.AddDays(5), EndDate=DateTime.Now.AddDays(10), RoomId=1, IsActive=true},
                 new Booking { StartDate=DateTime.Now.AddDays(11), EndDate=DateTime.Now.AddDays(15), RoomId=1, IsActive=true},
-                new Booking { StartDate=DateTime.Parse("01-12-2023"), EndDate=DateTime.Parse("07-12-2023"), RoomId=1, IsActive=true},
+                new Booking { StartDate=DateTime.Parse("02-12-2023"), EndDate=DateTime.Parse("07-12-2023"), RoomId=1, IsActive=true},
                 new Booking { StartDate=DateTime.Now.AddDays(5), EndDate=DateTime.Now.AddDays(10), RoomId=2, IsActive=true},
                 new Booking { StartDate=DateTime.Now.AddDays(11), EndDate=DateTime.Now.AddDays(15), RoomId=2, IsActive=true},
-                new Booking { StartDate=DateTime.Parse("01-12-2023"), EndDate=DateTime.Parse("07-12-2023"), RoomId=2, IsActive=true},
+                new Booking { StartDate=DateTime.Parse("02-12-2023"), EndDate=DateTime.Parse("07-12-2023"), RoomId=2, IsActive=true},
             };
             
             // Create fake Repositories. 
@@ -48,8 +48,8 @@ namespace HotelBooking.UnitTests
             Booking b = new Booking()
             {
                 Id = 1,
-                StartDate = DateTime.Parse("30-12-2023"),
-                EndDate = DateTime.Parse("08-01-2024"),
+                StartDate = DateTime.Parse("01-03-2023"),
+                EndDate = DateTime.Parse("04-03-2023"),
             };
             // Act
             var booking = bookingManager.CreateBooking(b);
@@ -57,7 +57,7 @@ namespace HotelBooking.UnitTests
             Assert.True(booking);
         }
 
-        [InlineData(1, "01-03-2022", "27-02-2022")] //End date before start date
+        [InlineData(1, "04-03-2022", "02-03-2022")] //End date before start date
         [InlineData(1, "01-02-2022", "08-02-2022")] //Start and end date in the past
         [InlineData(1, "01-02-2022", "04-04-2022")] //Start date in the past and end date after today
         [Theory]
@@ -74,8 +74,8 @@ namespace HotelBooking.UnitTests
             bookingMock.Verify(repo => repo.Add(It.Is<Booking>(bo => bo == b)), Times.Never);
         }
 
-        [InlineData("19-03-2022", "26-03-2022")]
-        [InlineData("30-11-2023", "04-12-2023")]
+        [InlineData("01-12-2023", "08-12-2023")]
+        [InlineData("01-12-2023", "04-12-2023")]
         [InlineData("02-12-2023", "04-12-2023")]
         [InlineData("02-12-2023", "08-12-2023")]
         [Theory]
@@ -93,19 +93,12 @@ namespace HotelBooking.UnitTests
         [Fact]
         public void CreateBookingBeforeFullyOccupiedDatesExpectTrue()
         {
-            Booking occupied = new Booking()
-            {
-                Id = 1,
-                StartDate = DateTime.Parse("20-11-2023"),
-                EndDate = DateTime.Parse("30-11-2023"),
-            };
             Booking b = new Booking()
             {
                 Id = 2,
                 StartDate = DateTime.Parse("10-11-2023"),
-                EndDate = DateTime.Parse("18-11-2023"),
+                EndDate = DateTime.Parse("12-11-2023"),
             };
-            bookingManager.CreateBooking(occupied);
             Assert.True(bookingManager.CreateBooking(b));
             bookingMock.Verify(repo => repo.Add(It.Is<Booking>(bo => bo == b)), Times.Once);
         }
@@ -117,7 +110,7 @@ namespace HotelBooking.UnitTests
             {
                 Id = 2,
                 StartDate = DateTime.Parse("9-12-2023"),
-                EndDate = DateTime.Parse("15-12-2023"),
+                EndDate = DateTime.Parse("12-12-2023"),
             };
             Assert.True(bookingManager.CreateBooking(b));
             bookingMock.Verify(repo => repo.Add(It.Is<Booking>(bo => bo == b)), Times.Once);
