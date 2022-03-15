@@ -19,13 +19,15 @@ namespace HotelBooking.UnitTests
             {
                 new Room { Id=1, Description="A" },                
                 new Room { Id=2, Description="B" },
-                new Room { Id=3, Description="C" },
             };
             var bookings = new List<Booking>
             {
                 new Booking { StartDate=DateTime.Now.AddDays(5), EndDate=DateTime.Now.AddDays(10), RoomId=1, IsActive=true},
+                new Booking { StartDate=DateTime.Now.AddDays(11), EndDate=DateTime.Now.AddDays(15), RoomId=1, IsActive=true},
+                new Booking { StartDate=DateTime.Parse("01-12-2023"), EndDate=DateTime.Parse("07-12-2023"), RoomId=1, IsActive=true},
+                new Booking { StartDate=DateTime.Now.AddDays(5), EndDate=DateTime.Now.AddDays(10), RoomId=2, IsActive=true},
                 new Booking { StartDate=DateTime.Now.AddDays(11), EndDate=DateTime.Now.AddDays(15), RoomId=2, IsActive=true},
-                new Booking { StartDate=DateTime.Parse("01-12-2023"), EndDate=DateTime.Parse("07-12-2023"), RoomId=3, IsActive=true},
+                new Booking { StartDate=DateTime.Parse("01-12-2023"), EndDate=DateTime.Parse("07-12-2023"), RoomId=2, IsActive=true},
             };
             
             // Create fake Repositories. 
@@ -72,16 +74,15 @@ namespace HotelBooking.UnitTests
             bookingMock.Verify(repo => repo.Add(It.Is<Booking>(bo => bo == b)), Times.Never);
         }
 
-        [InlineData(5, "30-11-2023", "08-12-2023")]
-        [InlineData(5, "30-11-2023", "04-12-2023")]
-        [InlineData(5, "02-12-2023", "04-12-2023")]
-        [InlineData(5, "02-12-2023", "08-12-2023")]
+        [InlineData("19-03-2022", "26-03-2022")]
+        [InlineData("30-11-2023", "04-12-2023")]
+        [InlineData("02-12-2023", "04-12-2023")]
+        [InlineData("02-12-2023", "08-12-2023")]
         [Theory]
-        public void CreateBookingOnFullyOccupiedDatesExpectArgumentException(int id, string startDate, string endDate)
+        public void CreateBookingOnFullyOccupiedDatesExpectArgumentException(string startDate, string endDate)
         {
             Booking b = new Booking()
             {
-                Id = id,
                 StartDate = DateTime.Parse(startDate),
                 EndDate = DateTime.Parse(endDate),
             };
@@ -112,19 +113,12 @@ namespace HotelBooking.UnitTests
         [Fact]
         public void CreateBookingAfterFullyOccupiedDatesExpectTrue()
         {
-            Booking occupied = new Booking()
-            {
-                Id = 1,
-                StartDate = DateTime.Parse("20-11-2023"),
-                EndDate = DateTime.Parse("30-11-2023"),
-            };
             Booking b = new Booking()
             {
                 Id = 2,
-                StartDate = DateTime.Parse("1-12-2023"),
-                EndDate = DateTime.Parse("8-12-2023"),
+                StartDate = DateTime.Parse("9-12-2023"),
+                EndDate = DateTime.Parse("15-12-2023"),
             };
-            bookingManager.CreateBooking(occupied);
             Assert.True(bookingManager.CreateBooking(b));
             bookingMock.Verify(repo => repo.Add(It.Is<Booking>(bo => bo == b)), Times.Once);
         }
@@ -140,7 +134,7 @@ namespace HotelBooking.UnitTests
             Assert.NotEqual(-1, roomId);
         }
 
-        /*
+        
         [Fact]
         public void FindAvailableRoom_StartDateNotInTheFuture_ThrowsArgumentException()
         {
@@ -164,6 +158,5 @@ namespace HotelBooking.UnitTests
             // Assert
             Assert.NotEqual(-1, roomId);
         }
-        */
     }
 }
