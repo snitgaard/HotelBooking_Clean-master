@@ -14,7 +14,7 @@ namespace HotelBooking.UnitTests
         private Mock<IRepository<Room>> roomMock;
 
         public BookingManagerTests()
-        {
+        { 
             var rooms = new List<Room>
             {
                 new Room { Id=1, Description="A" },                
