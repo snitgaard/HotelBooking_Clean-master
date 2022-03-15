@@ -79,7 +79,7 @@ namespace HotelBooking.UnitTests
         [InlineData("02-12-2023", "04-12-2023")]
         [InlineData("02-12-2023", "08-12-2023")]
         [Theory]
-        public void CreateBookingOnFullyOccupiedDatesExpectArgumentException(string startDate, string endDate)
+        public void CreateBookingOnFullyOccupiedDatesExpectFalse(string startDate, string endDate)
         {
             Booking b = new Booking()
             {
