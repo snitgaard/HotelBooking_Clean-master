@@ -48,8 +48,8 @@ namespace HotelBooking.UnitTests
             Booking b = new Booking()
             {
                 Id = 1,
-                StartDate = DateTime.Parse("01-03-2023"),
-                EndDate = DateTime.Parse("04-03-2023"),
+                StartDate = DateTime.Parse("01-03-2028"),
+                EndDate = DateTime.Parse("04-03-2028"),
             };
             // Act
             var booking = bookingManager.CreateBooking(b);
