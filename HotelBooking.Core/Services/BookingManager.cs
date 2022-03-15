@@ -19,6 +19,7 @@ namespace HotelBooking.Core
         public bool CreateBooking(Booking booking)
         {
             int roomId = FindAvailableRoom(booking.StartDate, booking.EndDate);
+
             if (roomId >= 0)
             {
                 booking.RoomId = roomId;
@@ -26,7 +27,6 @@ namespace HotelBooking.Core
                 bookingRepository.Add(booking);
                 return true;
             }
-
             else
             {
                 return false;
@@ -37,7 +37,6 @@ namespace HotelBooking.Core
         {
             if (startDate <= DateTime.Today || startDate > endDate)
                 throw new ArgumentException("The start date cannot be in the past or later than the end date.");
-          
 
             var activeBookings = bookingRepository.GetAll().Where(b => b.IsActive);
             foreach (var room in roomRepository.GetAll())
@@ -51,7 +50,7 @@ namespace HotelBooking.Core
             }
             return -1;
         }
-         
+
         public List<DateTime> GetFullyOccupiedDates(DateTime startDate, DateTime endDate)
         {
             if (startDate > endDate)

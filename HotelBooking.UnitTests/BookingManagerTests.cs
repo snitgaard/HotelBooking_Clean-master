@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using HotelBooking.Core;
 using HotelBooking.UnitTests.Fakes;
 using Moq;
@@ -8,45 +9,55 @@ namespace HotelBooking.UnitTests
 {
     public class BookingManagerTests
     {
-        private IBookingManager bookingManager;
+        private BookingManager bookingManager;
         private Mock<IRepository<Booking>> bookingMock;
         private Mock<IRepository<Room>> roomMock;
 
-        public BookingManagerTests(){
-            DateTime start = DateTime.Today.AddDays(10);
-            DateTime end = DateTime.Today.AddDays(20);
-            IRepository<Booking> bookingRepository = new FakeBookingRepository(start, end);
-            IRepository<Room> roomRepository = new FakeRoomRepository();
-            bookingManager = new BookingManager(bookingRepository, roomRepository);
-
-            bookingMock = new Mock<IRepository<Booking>>();
+        public BookingManagerTests()
+        {
+            var rooms = new List<Room>
+            {
+                new Room { Id=1, Description="A" },                
+                new Room { Id=2, Description="B" },
+                new Room { Id=3, Description="C" },
+            };
+            var bookings = new List<Booking>
+            {
+                new Booking { StartDate=DateTime.Now.AddDays(5), EndDate=DateTime.Now.AddDays(10), RoomId=1, IsActive=true},
+                new Booking { StartDate=DateTime.Now.AddDays(11), EndDate=DateTime.Now.AddDays(15), RoomId=2, IsActive=true},
+                new Booking { StartDate=DateTime.Parse("01-12-2023"), EndDate=DateTime.Parse("07-12-2023"), RoomId=3, IsActive=true},
+            };
+            
+            // Create fake Repositories. 
             roomMock = new Mock<IRepository<Room>>();
+            bookingMock = new Mock<IRepository<Booking>>();
+
+            // Implement fake GetAll() method.
+            roomMock.Setup(x => x.GetAll()).Returns(rooms);
+            bookingMock.Setup(x => x.GetAll()).Returns(bookings);
+
+            bookingManager = new BookingManager(bookingMock.Object, roomMock.Object);
         }
 
-
-
-        [InlineData(1, "2024-03-02", "2024-03-09", true)]
-        [Theory]
-        public void CreateValidBookingNotExist(int id, string startDate, string endDate, bool isActive)
+        [Fact]
+        public void CreateValidBookingNotExist()
         {
-            IRepository<Booking> bookingRepo = bookingMock.Object;
-            IRepository<Room> roomRepo = roomMock.Object;
-
-            BookingManager manager = new BookingManager(bookingRepo, roomRepo);
-
+            // Arrange
             Booking b = new Booking()
             {
-                Id = id,
-                StartDate = DateTime.Parse(startDate),
-                EndDate = DateTime.Parse(endDate),
-                IsActive = isActive
+                Id = 1,
+                StartDate = DateTime.Parse("30-12-2023"),
+                EndDate = DateTime.Parse("08-01-2024"),
             };
-            manager.CreateBooking(b);
-            bookingMock.Verify(repo => repo.Add(It.Is<Booking>((bo => bo == b))), Times.Once);
+            // Act
+            var booking = bookingManager.CreateBooking(b);
+            // Assert
+            Assert.True(booking);
         }
 
-        [InlineData(1, "01-03-2022", "01-03-2022")]
-        [InlineData(1, "01-03-2022", "27-02-2022")]
+        [InlineData(1, "01-03-2022", "27-02-2022")] //End date before start date
+        [InlineData(1, "01-02-2022", "08-02-2022")] //Start and end date in the past
+        [InlineData(1, "01-02-2022", "04-04-2022")] //Start date in the past and end date after today
         [Theory]
         public void CreateInvalidBookingExpectArgumentException(int id, string startDate, string endDate)
         {
@@ -61,55 +72,72 @@ namespace HotelBooking.UnitTests
             bookingMock.Verify(repo => repo.Add(It.Is<Booking>(bo => bo == b)), Times.Never);
         }
 
-        /*
-        [Fact]
-        public void CreateBookingExistingBookingExpectInvalidOperationException()
+        [InlineData(5, "30-11-2023", "08-12-2023")]
+        [InlineData(5, "30-11-2023", "04-12-2023")]
+        [InlineData(5, "02-12-2023", "04-12-2023")]
+        [InlineData(5, "02-12-2023", "08-12-2023")]
+        [Theory]
+        public void CreateBookingOnFullyOccupiedDatesExpectArgumentException(int id, string startDate, string endDate)
         {
-            IRepository<Booking> bookingRepo = bookingMock.Object;
-            IRepository<Room> roomRepo = roomMock.Object;
+            Booking b = new Booking()
+            {
+                Id = id,
+                StartDate = DateTime.Parse(startDate),
+                EndDate = DateTime.Parse(endDate),
+            };
+            Assert.False(bookingManager.CreateBooking(b));
+            bookingMock.Verify(repo => repo.Add(It.Is<Booking>(bo => bo == b)), Times.Never);
+        }
 
-            BookingManager manager = new BookingManager(bookingRepo, roomRepo);
-
-            Booking booking = new Booking()
+        [Fact]
+        public void CreateBookingBeforeFullyOccupiedDatesExpectTrue()
+        {
+            Booking occupied = new Booking()
             {
                 Id = 1,
-                CustomerId = 1,
-                StartDate = DateTime.Parse("06-03-2022"),
-                EndDate = DateTime.Parse("08-03-2022"),
-                RoomId = 1
+                StartDate = DateTime.Parse("20-11-2023"),
+                EndDate = DateTime.Parse("30-11-2023"),
             };
-
-            bookingMock.Setup(repo => repo.Get(It.Is<int>(x => x == booking.Id))).Returns(() => booking);
-            var bookingEx = Assert.Throws<InvalidOperationException>(() => manager.CreateBooking(booking));
-            Assert.Equal("Booking already exists.", bookingEx.Message);
-            bookingMock.Verify(repo => repo.Add(It.Is<Booking>(b => b == booking)), Times.Never);
+            Booking b = new Booking()
+            {
+                Id = 2,
+                StartDate = DateTime.Parse("10-11-2023"),
+                EndDate = DateTime.Parse("18-11-2023"),
+            };
+            bookingManager.CreateBooking(occupied);
+            Assert.True(bookingManager.CreateBooking(b));
+            bookingMock.Verify(repo => repo.Add(It.Is<Booking>(bo => bo == b)), Times.Once);
         }
-        */
 
-        public void FindNotAvailableRoomExpectArgumentException()
+        [Fact]
+        public void CreateBookingAfterFullyOccupiedDatesExpectTrue()
         {
-
+            Booking occupied = new Booking()
+            {
+                Id = 1,
+                StartDate = DateTime.Parse("20-11-2023"),
+                EndDate = DateTime.Parse("30-11-2023"),
+            };
+            Booking b = new Booking()
+            {
+                Id = 2,
+                StartDate = DateTime.Parse("1-12-2023"),
+                EndDate = DateTime.Parse("8-12-2023"),
+            };
+            bookingManager.CreateBooking(occupied);
+            Assert.True(bookingManager.CreateBooking(b));
+            bookingMock.Verify(repo => repo.Add(It.Is<Booking>(bo => bo == b)), Times.Once);
         }
 
         [Fact]
         public void FindValidAvailableRoom()
         {
             // Arrange
-            DateTime date = DateTime.Today.AddDays(1);
+            DateTime date = DateTime.Today.AddDays(30);
             // Act
             int roomId = bookingManager.FindAvailableRoom(date, date);
             // Assert
             Assert.NotEqual(-1, roomId);
-        }
-
-        public void GetInvalidFullyOccupiedDatesExpectArgumentException()
-        {
-
-        }
-
-        public void GetValidFullyOcupiedDates()
-        {
-
         }
 
         /*
