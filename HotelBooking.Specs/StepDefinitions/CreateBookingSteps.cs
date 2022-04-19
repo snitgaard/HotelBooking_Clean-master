@@ -25,10 +25,10 @@ namespace HotelBooking.Specs.StepDefinitions
             {
                 new Booking { StartDate=DateTime.Now.AddDays(5), EndDate=DateTime.Now.AddDays(10), RoomId=1, IsActive=true},
                 new Booking { StartDate=DateTime.Now.AddDays(11), EndDate=DateTime.Now.AddDays(15), RoomId=1, IsActive=true},
-                new Booking { StartDate=DateTime.Parse("02-12-2023"), EndDate=DateTime.Parse("07-12-2023"), RoomId=1, IsActive=true},
+                new Booking { StartDate=DateTime.Parse("2023-12-02"), EndDate=DateTime.Parse("2023-12-07"), RoomId=1, IsActive=true},
                 new Booking { StartDate=DateTime.Now.AddDays(5), EndDate=DateTime.Now.AddDays(10), RoomId=2, IsActive=true},
                 new Booking { StartDate=DateTime.Now.AddDays(11), EndDate=DateTime.Now.AddDays(15), RoomId=2, IsActive=true},
-                new Booking { StartDate=DateTime.Parse("02-12-2023"), EndDate=DateTime.Parse("07-12-2023"), RoomId=2, IsActive=true},
+                new Booking { StartDate=DateTime.Parse("2023-12-02"), EndDate=DateTime.Parse("2023-12-07"), RoomId=2, IsActive=true},
             };
 
             // Create fake Repositories. 
@@ -42,18 +42,17 @@ namespace HotelBooking.Specs.StepDefinitions
             bookingManager = new BookingManager(bookingMock.Object, roomMock.Object);
         }
 
-        [Scope(Tag = "CreateBooking_StartDateBeforeOccupied_EndDateInOccupied")]
-
-        [Given(@"I create a booking with startdate (.*)")]
-        public void GivenICreateABookingWithBefore(DateTime startDate)
+        // Scenario 1
+        [Given(@"I create a booking with startdate '(.*)'")]
+        public void GivenICreateABookingWithBefore(string startDate)
         {
-            _startDate = startDate;
+            _startDate = DateTime.Parse(startDate);
         }
 
-        [Given(@"The (.*) between occupied Start date and End date")]
-        public void GivenTheBetweenAnd(DateTime endDate)
+        [Given(@"The following EndDate '(.*)'")]
+        public void GivenTheBetweenAnd(string endDate)
         {
-            _endDate = endDate;
+            _endDate = DateTime.Parse(endDate);
         }
 
         [When(@"I create the booking")]
@@ -75,6 +74,42 @@ namespace HotelBooking.Specs.StepDefinitions
         }
 
         //Scenario 2
+
+        [Given(@"The following StartDate '(.*)'")]
+        public void GivenTheFollowingStartDate(string startDate)
+        {
+            _startDate = DateTime.Parse(startDate);
+        }
+
+        [Given(@"The EndDate '(.*)'")]
+        public void GivenTheEndDate(string endDate)
+        {
+            _endDate = DateTime.Parse(endDate);
+        }
+
+        [When(@"I create a booking")]
+        public void WhenICreateABooking()
+        {
+            Booking b = new Booking
+            {
+                StartDate = _startDate,
+                EndDate = _endDate
+            };
+
+            bookingResult = bookingManager.CreateBooking(b);
+        }
+
+        [Then(@"The result will be True")]
+        public void TheResultWillBeTrue()
+        {
+            Assert.True(bookingResult);
+        }
+
+
+
+
+
+        //Other examples
 
         [Scope(Tag = "CreateBooking_StartDateBeforeOccupied_EndDateAfterOccupied")]
 
